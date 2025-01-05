@@ -18,7 +18,7 @@ class Solitaire:
     _columns: list[str] = [str(_) for _ in range(1, 8)]
     _places: list[str] = (_columns +
                           ["drawn"] +
-                          _suits)
+                          [_.lower() for _ in _suits])
 
     def __init__(self):
         self.card_deck: Deck = Deck()
@@ -57,15 +57,17 @@ class Solitaire:
         if (from_place not in Solitaire._places or
                 to_place not in Solitaire._places):
             raise ValueError("Invalid places. Use the following.\n" +
-                             "|".join(Solitaire._places))
+                             "|".join(Solitaire._suits) + "|" +
+                             "|".join(Solitaire._columns) + "|" +
+                             "drawn")
         if to_place == "drawn":
             raise ValueError("Can not put cards back into draw pile.")
 
         temp_save: Solitaire = deepcopy(self)
         try:
-            if from_place in Solitaire._suits:
+            if from_place in [_.lower() for _ in Solitaire._suits]:
                 from_card: "Card" = self.suite_stacks[
-                    Solitaire._suits.index(from_place)].pull()
+                    Solitaire._suits.index(from_place.capitalize())].pull()
             if from_place in Solitaire._columns:
                 from_card = self.card_spread.get_out(int(from_place))
             else:
@@ -75,9 +77,9 @@ class Solitaire:
             raise FailedExecution("Failed to get the card.")
 
         try:
-            if to_place in Solitaire._suits:
+            if to_place in [_.lower() for _ in Solitaire._suits]:
                 self.suite_stacks[
-                    Solitaire._suits.index(to_place)].push(from_card)
+                    Solitaire._suits.index(to_place.capitalize())].push(from_card)
             else:
                 self.card_spread.put_in(from_card, int(to_place))
         except (WrongCard, ValueError, MisMatchColour) as e:
@@ -128,7 +130,7 @@ def main():
             from_p, to_p = decoded_command.groups()
             try:
                 game.from_to(from_p, to_p)
-            except ValueError as v:
+            except (ValueError, FailedExecution) as v:
                 print(v)
         # end region
 
